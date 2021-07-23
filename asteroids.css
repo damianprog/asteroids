@@ -1,0 +1,17 @@
+body {
+  font-family: 'PressStart2P';
+  color: #fff;
+}
+
+canvas {
+  background: linear-gradient(-45deg, #070f10, #12222f);
+}
+
+img {
+  display: none;
+}
+
+.main-container {
+  width: 592px;
+  margin: 21px auto 0 auto;
+}
