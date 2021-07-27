@@ -2,6 +2,7 @@ import SpaceShip from './space-ship.js';
 import Input from './input.js';
 import Missile from './missile.js';
 import Position from './position.js';
+import Asteroid from './asteroid.js';
 
 export default class Game {
   constructor(gameWidth, gameHeight) {
@@ -10,6 +11,15 @@ export default class Game {
     this.spaceShip = new SpaceShip(this);
     this.inputHandler = new Input(this.spaceShip, this);
     this.missiles = [];
+    this.level = 1;
+    this.asteroids = this.createAsteroids();
+  }
+
+  createAsteroids() {
+    return [
+      new Asteroid(this, new Position(250, 200)),
+      new Asteroid(this, new Position(250, 200)),
+    ];
   }
 
   getVectorPosition(angle, length) {
@@ -62,6 +72,7 @@ export default class Game {
     // ctx.strokeRect(200, 200, 50, 50);
 
     this.missiles.forEach((missile) => missile.draw(ctx));
+    this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
   }
 
   update(deltaTime) {
@@ -70,6 +81,20 @@ export default class Game {
       (missile) => !missile.markedForDeletion
     );
     this.missiles.forEach((missile) => missile.update(deltaTime));
+    this.asteroids.forEach((asteroid) => {
+      asteroid.update(deltaTime);
+      if (asteroid.markedForDeletion && asteroid.size > 1) {
+        const newAsteroids = [
+          new Asteroid(this, { ...asteroid.position }, asteroid.size - 1),
+          new Asteroid(this, { ...asteroid.position }, asteroid.size - 1),
+        ];
+        this.asteroids = [...newAsteroids, ...this.asteroids];
+      }
+    });
+
+    this.asteroids = this.asteroids.filter(
+      (asteroid) => !asteroid.markedForDeletion
+    );
   }
 
   clear(ctx) {

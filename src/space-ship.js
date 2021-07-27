@@ -6,7 +6,7 @@ export default class SpaceShip {
     this.position = new Position(250, 400);
     this.height = 40;
     this.rotationSpeed = 0;
-    this.radiansAngle = 0.5 * Math.PI;
+    this.radiansAngle = 0;
     this.propelSpeed = 0;
     this.isPropelling = false;
 

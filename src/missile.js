@@ -42,6 +42,27 @@ export default class Missile {
     }
   }
 
+  getVerticesPositions() {
+    return [
+      new Position(
+        this.position.x - this.radius,
+        this.position.y - this.radius
+      ),
+      new Position(
+        this.position.x + this.radius,
+        this.position.y - this.radius
+      ),
+      new Position(
+        this.position.x + this.radius,
+        this.position.y + this.radius
+      ),
+      new Position(
+        this.position.x - this.radius,
+        this.position.y + this.radius
+      ),
+    ];
+  }
+
   update(deltaTime) {
     const distanceX = this.speed * Math.cos(this.radiansAngle);
     const distanceY = this.speed * Math.sin(this.radiansAngle);
