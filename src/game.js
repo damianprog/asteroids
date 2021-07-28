@@ -17,8 +17,8 @@ export default class Game {
 
   createAsteroids() {
     return [
-      new Asteroid(this, new Position(250, 200)),
-      new Asteroid(this, new Position(250, 200)),
+      // new Asteroid(this, new Position(250, 200)),
+      // new Asteroid(this, new Position(250, 200)),
     ];
   }
 

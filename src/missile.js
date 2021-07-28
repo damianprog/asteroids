@@ -6,7 +6,7 @@ export default class Missile {
     this.game = game;
     this.position = position;
     this.radiansAngle = radiansAngle;
-    this.speed = 6;
+    this.speed = 8;
     this.radius = 4;
     this.distanceTravelled = 0;
     this.markedForDeletion = false;

@@ -93,10 +93,6 @@ export default class Asteroid {
 
   update(deltaTime) {
     this.game.missiles.forEach((missile, index) => {
-      if (index === 0) {
-        console.log(missile.getVerticesPositions());
-      }
-
       if (
         collisionDetection(
           this.getVerticesPositions(),

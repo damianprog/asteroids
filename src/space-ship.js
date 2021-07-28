@@ -3,8 +3,9 @@ import Position from './position.js';
 export default class SpaceShip {
   constructor(game) {
     this.game = game;
-    this.position = new Position(250, 400);
-    this.height = 40;
+    this.position = new Position(200, 400);
+    this.height = 50;
+    this.width = 40;
     this.rotationSpeed = 0;
     this.radiansAngle = 0;
     this.propelSpeed = 0;
@@ -16,15 +17,18 @@ export default class SpaceShip {
 
   draw(ctx) {
     ctx.save();
-    ctx.translate(this.position.x - 20, this.position.y);
+    ctx.translate(this.position.x - this.height / 2, this.position.y);
     ctx.rotate(this.radiansAngle);
-    ctx.translate((this.position.x - 20) * -1, this.position.y * -1);
+    ctx.translate(
+      (this.position.x - this.height / 2) * -1,
+      this.position.y * -1
+    );
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#fff';
     ctx.beginPath();
     ctx.moveTo(this.position.x, this.position.y);
-    ctx.lineTo(this.position.x - 40, this.position.y - 40);
-    ctx.lineTo(this.position.x - 40, this.position.y + 40);
+    ctx.lineTo(this.position.x - this.height, this.position.y - this.width / 2);
+    ctx.lineTo(this.position.x - this.height, this.position.y + this.width / 2);
     ctx.closePath();
     ctx.shadowColor = '#4d706b';
     ctx.shadowBlur = 10;
@@ -33,23 +37,32 @@ export default class SpaceShip {
   }
 
   flipPosition() {
-    const isPosXLessThanZero = this.position.x < -25;
+    const originX = this.position.x - this.height / 2;
+    const originY = this.position.y;
+    const longestDistanceFromOriginToEdge = Math.sqrt(
+      Math.pow(this.height / 2, 2) + Math.pow(this.width / 2, 2)
+    );
 
+    const isPosXLessThanZero = originX < -longestDistanceFromOriginToEdge;
     const isPosXGreaterThanBoundary =
-      this.position.x > this.game.gameWidth + 20 + 45;
+      originX > this.game.gameWidth + longestDistanceFromOriginToEdge;
 
     if (isPosXLessThanZero || isPosXGreaterThanBoundary) {
       this.position.x = isPosXLessThanZero
-        ? this.game.gameWidth + 20 + 45
-        : -25;
+        ? this.game.gameWidth +
+          this.height / 2 +
+          longestDistanceFromOriginToEdge
+        : -(longestDistanceFromOriginToEdge - this.height / 2);
     }
 
-    const isPosYLessThanZero = this.position.y + 45 < 0;
+    const isPosYLessThanZero = originY < -longestDistanceFromOriginToEdge;
     const isPosYGreaterThanBoundary =
-      this.position.y - 45 > this.game.gameHeight;
+      originY > this.game.gameHeight + longestDistanceFromOriginToEdge;
 
     if (isPosYLessThanZero || isPosYGreaterThanBoundary) {
-      this.position.y = isPosYLessThanZero ? this.game.gameHeight + 45 : -45;
+      this.position.y = isPosYLessThanZero
+        ? this.game.gameHeight + longestDistanceFromOriginToEdge
+        : -longestDistanceFromOriginToEdge;
     }
   }
 
