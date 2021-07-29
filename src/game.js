@@ -17,8 +17,8 @@ export default class Game {
 
   createAsteroids() {
     return [
-      // new Asteroid(this, new Position(250, 200)),
-      // new Asteroid(this, new Position(250, 200)),
+      new Asteroid(this, new Position(250, 200)),
+      new Asteroid(this, new Position(250, 200)),
     ];
   }
 
@@ -30,17 +30,15 @@ export default class Game {
   }
 
   getMissileStartingPosition() {
-    const spaceShipOriginX =
-      this.spaceShip.position.x - this.spaceShip.height / 2;
-    const spaceShipOriginY = this.spaceShip.position.y;
-
     const vectorPosition = this.getVectorPosition(
       this.spaceShip.radiansAngle,
       this.spaceShip.height / 2
     );
 
-    const spaceShipRotatedPositionX = spaceShipOriginX + vectorPosition.x;
-    const spaceShipRotatedPositionY = spaceShipOriginY + vectorPosition.y;
+    const spaceShipRotatedPositionX =
+      this.spaceShip.position.x + vectorPosition.x;
+    const spaceShipRotatedPositionY =
+      this.spaceShip.position.y + vectorPosition.y;
 
     return new Position(spaceShipRotatedPositionX, spaceShipRotatedPositionY);
   }
@@ -59,18 +57,6 @@ export default class Game {
 
   draw(ctx) {
     this.spaceShip.draw(ctx);
-
-    // ctx.fillStyle = 'red';
-    // ctx.fillRect(
-    //   this.spaceShip.position.x - 3,
-    //   this.spaceShip.position.y - 3,
-    //   6,
-    //   6
-    // );
-
-    // ctx.strokeStyle = '#fff';
-    // ctx.strokeRect(200, 200, 50, 50);
-
     this.missiles.forEach((missile) => missile.draw(ctx));
     this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
   }

@@ -6,7 +6,7 @@ export default class Missile {
     this.game = game;
     this.position = position;
     this.radiansAngle = radiansAngle;
-    this.speed = 8;
+    this.speed = 0.5;
     this.radius = 4;
     this.distanceTravelled = 0;
     this.markedForDeletion = false;
@@ -64,8 +64,8 @@ export default class Missile {
   }
 
   update(deltaTime) {
-    const distanceX = this.speed * Math.cos(this.radiansAngle);
-    const distanceY = this.speed * Math.sin(this.radiansAngle);
+    const distanceX = this.speed * deltaTime * Math.cos(this.radiansAngle);
+    const distanceY = this.speed * deltaTime * Math.sin(this.radiansAngle);
 
     this.position.x = this.position.x + distanceX;
     this.position.y = this.position.y + distanceY;

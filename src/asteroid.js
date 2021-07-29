@@ -28,7 +28,7 @@ export default class Asteroid {
       ],
     ];
     this.currentShape = this.shapes[0];
-    this.speed = Math.random() * 2 + 1;
+    this.speed = Math.random() * 0.08 + 0.04;
     this.speedX = Math.random() * this.speed;
     this.speedY = this.speed - Math.abs(this.speedX);
 
@@ -92,7 +92,7 @@ export default class Asteroid {
   }
 
   update(deltaTime) {
-    this.game.missiles.forEach((missile, index) => {
+    this.game.missiles.forEach((missile) => {
       if (
         collisionDetection(
           this.getVerticesPositions(),
@@ -104,8 +104,8 @@ export default class Asteroid {
       }
     });
 
-    this.position.x += this.speedX;
-    this.position.y += this.speedY;
+    this.position.x += this.speedX * deltaTime;
+    this.position.y += this.speedY * deltaTime;
 
     this.flipPosition();
   }

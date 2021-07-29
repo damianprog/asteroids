@@ -9,7 +9,6 @@ export default class SpaceShip {
     this.rotationSpeed = 0;
     this.radiansAngle = 0;
     this.propelSpeed = 0;
-    this.isPropelling = false;
 
     this.speedX = 0;
     this.speedY = 0;
@@ -17,18 +16,21 @@ export default class SpaceShip {
 
   draw(ctx) {
     ctx.save();
-    ctx.translate(this.position.x - this.height / 2, this.position.y);
+    ctx.translate(this.position.x, this.position.y);
     ctx.rotate(this.radiansAngle);
-    ctx.translate(
-      (this.position.x - this.height / 2) * -1,
-      this.position.y * -1
-    );
+    ctx.translate(this.position.x * -1, this.position.y * -1);
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#fff';
     ctx.beginPath();
-    ctx.moveTo(this.position.x, this.position.y);
-    ctx.lineTo(this.position.x - this.height, this.position.y - this.width / 2);
-    ctx.lineTo(this.position.x - this.height, this.position.y + this.width / 2);
+    ctx.moveTo(this.position.x + this.height / 2, this.position.y);
+    ctx.lineTo(
+      this.position.x - this.height / 2,
+      this.position.y - this.width / 2
+    );
+    ctx.lineTo(
+      this.position.x - this.height / 2,
+      this.position.y + this.width / 2
+    );
     ctx.closePath();
     ctx.shadowColor = '#4d706b';
     ctx.shadowBlur = 10;
@@ -37,32 +39,30 @@ export default class SpaceShip {
   }
 
   flipPosition() {
-    const originX = this.position.x - this.height / 2;
-    const originY = this.position.y;
     const longestDistanceFromOriginToEdge = Math.sqrt(
       Math.pow(this.height / 2, 2) + Math.pow(this.width / 2, 2)
     );
 
-    const isPosXLessThanZero = originX < -longestDistanceFromOriginToEdge;
+    const isPosXLessThanZero =
+      this.position.x < longestDistanceFromOriginToEdge * -1;
     const isPosXGreaterThanBoundary =
-      originX > this.game.gameWidth + longestDistanceFromOriginToEdge;
+      this.position.x > this.game.gameWidth + longestDistanceFromOriginToEdge;
 
     if (isPosXLessThanZero || isPosXGreaterThanBoundary) {
       this.position.x = isPosXLessThanZero
-        ? this.game.gameWidth +
-          this.height / 2 +
-          longestDistanceFromOriginToEdge
-        : -(longestDistanceFromOriginToEdge - this.height / 2);
+        ? this.game.gameWidth + longestDistanceFromOriginToEdge
+        : longestDistanceFromOriginToEdge * -1;
     }
 
-    const isPosYLessThanZero = originY < -longestDistanceFromOriginToEdge;
+    const isPosYLessThanZero =
+      this.position.y < longestDistanceFromOriginToEdge * -1;
     const isPosYGreaterThanBoundary =
-      originY > this.game.gameHeight + longestDistanceFromOriginToEdge;
+      this.position.y > this.game.gameHeight + longestDistanceFromOriginToEdge;
 
     if (isPosYLessThanZero || isPosYGreaterThanBoundary) {
       this.position.y = isPosYLessThanZero
         ? this.game.gameHeight + longestDistanceFromOriginToEdge
-        : -longestDistanceFromOriginToEdge;
+        : longestDistanceFromOriginToEdge * -1;
     }
   }
 
@@ -70,12 +70,12 @@ export default class SpaceShip {
     this.radiansAngle =
       this.radiansAngle >= 2 * Math.PI
         ? 0
-        : this.radiansAngle + this.rotationSpeed;
+        : this.radiansAngle + this.rotationSpeed * deltaTime;
 
     const newSpeedX =
-      this.speedX + this.propelSpeed * Math.cos(this.radiansAngle);
+      this.speedX + this.propelSpeed * deltaTime * Math.cos(this.radiansAngle);
     const newSpeedY =
-      this.speedY + this.propelSpeed * Math.sin(this.radiansAngle);
+      this.speedY + this.propelSpeed * deltaTime * Math.sin(this.radiansAngle);
 
     const speedVectorLength = Math.sqrt(
       Math.pow(newSpeedX, 2) + Math.pow(newSpeedY, 2)
@@ -86,22 +86,9 @@ export default class SpaceShip {
       this.speedY = newSpeedY;
     }
 
-    if (!this.isPropelling) {
-      const angle = Math.atan2(this.speedY, this.speedX);
-
-      if (this.speedX !== 0) {
-        const oppositeSpeedX = -0.01 * Math.cos(angle);
-        const newOppositeSpeedX = this.speedX + oppositeSpeedX;
-        this.speedX =
-          this.speedX > 0 && newOppositeSpeedX <= 0 ? 0 : newOppositeSpeedX;
-      }
-
-      if (this.speedY !== 0) {
-        const oppositeSpeedY = -0.01 * Math.sin(angle);
-        const newOppositeSpeedY = this.speedY + oppositeSpeedY;
-        this.speedY =
-          this.speedY > 0 && newOppositeSpeedY <= 0 ? 0 : newOppositeSpeedY;
-      }
+    if (this.propelSpeed === 0) {
+      this.speedX = this.getSlowerSpeed(this.speedX, deltaTime);
+      this.speedY = this.getSlowerSpeed(this.speedY, deltaTime);
     }
 
     this.position.x = this.position.x + this.speedX;
@@ -110,12 +97,23 @@ export default class SpaceShip {
     this.flipPosition();
   }
 
+  getSlowerSpeed(speed, deltaTime) {
+    if (speed === 0) return 0;
+
+    const oppositeSpeed = -0.0007 * deltaTime * speed;
+    const newSpeed = speed + oppositeSpeed;
+    const hasNewSpeedOppositeDirection =
+      (speed > 0 && newSpeed < 0) || (speed < 0 && newSpeed > 0);
+
+    return hasNewSpeedOppositeDirection ? 0 : newSpeed;
+  }
+
   rotateLeft() {
-    this.rotationSpeed = -0.08;
+    this.rotationSpeed = -0.005;
   }
 
   rotateRight() {
-    this.rotationSpeed = 0.08;
+    this.rotationSpeed = 0.005;
   }
 
   stopRotating() {
@@ -123,12 +121,10 @@ export default class SpaceShip {
   }
 
   propel() {
-    this.isPropelling = true;
-    this.propelSpeed = 0.1;
+    this.propelSpeed = 0.006;
   }
 
   stopPropel() {
-    this.isPropelling = false;
     this.propelSpeed = 0;
   }
 }
