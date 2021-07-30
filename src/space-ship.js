@@ -1,3 +1,4 @@
+import collisionDetection from './collision-detection.js';
 import Position from './position.js';
 
 export default class SpaceShip {
@@ -9,6 +10,7 @@ export default class SpaceShip {
     this.rotationSpeed = 0;
     this.radiansAngle = 0;
     this.propelSpeed = 0;
+    this.lives = 5;
 
     this.speedX = 0;
     this.speedY = 0;
@@ -66,6 +68,40 @@ export default class SpaceShip {
     }
   }
 
+  getVerticesPositions() {
+    let vertices = [
+      new Position(this.height / 2, 0),
+      new Position(-1 * (this.height / 2), this.width / 2),
+      new Position(-1 * (this.height / 2), -1 * (this.width / 2)),
+    ];
+
+    vertices = vertices.map((vertice) => {
+      const defaultAngle = Math.atan2(vertice.y, vertice.x);
+
+      const currentAngle = defaultAngle + this.radiansAngle;
+
+      const length = Math.sqrt(Math.pow(vertice.x, 2) + Math.pow(vertice.y, 2));
+
+      const verticeX = this.position.x + Math.cos(currentAngle) * length;
+      const verticeY = this.position.y + Math.sin(currentAngle) * length;
+
+      return new Position(verticeX, verticeY);
+    });
+
+    return vertices;
+  }
+
+  detectCollisionWithAsteroids() {
+    const spaceShipVertices = this.getVerticesPositions();
+    this.game.asteroids.forEach((asteroid) => {
+      const asteroidVertices = asteroid.getVerticesPositions();
+
+      if (collisionDetection(spaceShipVertices, asteroidVertices)) {
+        this.game.onSpaceShipCollision();
+      }
+    });
+  }
+
   update(deltaTime) {
     this.radiansAngle =
       this.radiansAngle >= 2 * Math.PI
@@ -94,6 +130,7 @@ export default class SpaceShip {
     this.position.x = this.position.x + this.speedX;
     this.position.y = this.position.y + this.speedY;
 
+    this.detectCollisionWithAsteroids();
     this.flipPosition();
   }
 

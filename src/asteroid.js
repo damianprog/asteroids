@@ -1,5 +1,6 @@
 import collisionDetection from './collision-detection.js';
 import Position from './position.js';
+import Shapes from './asteroid-shapes.js';
 
 export default class Asteroid {
   constructor(game, position, size = 3) {
@@ -7,33 +8,24 @@ export default class Asteroid {
     this.position = position;
     this.size = size;
     this.markedForDeletion = false;
-    this.shapes = [
-      [
-        {
-          x: 26 * this.size,
-          y: 13 * this.size,
-        },
-        {
-          x: 20 * this.size,
-          y: 33 * this.size,
-        },
-        {
-          x: -7 * this.size,
-          y: 47 * this.size,
-        },
-        {
-          x: -20 * this.size,
-          y: 13 * this.size,
-        },
-      ],
-    ];
-    this.currentShape = this.shapes[0];
-    this.speed = Math.random() * 0.08 + 0.04;
-    this.speedX = Math.random() * this.speed;
-    this.speedY = this.speed - Math.abs(this.speedX);
+    this.currentShape = this.getRandomShape();
+    // this.speed = Math.random() * 0.08 + 0.04;
+    // this.speedX = Math.random() * this.speed;
+    // this.speedY = this.speed - Math.abs(this.speedX);
+    this.speedX = 0;
+    this.speedY = 0;
 
-    if (Math.random() > 0.5) this.speedX = this.speedX * -1;
-    if (Math.random() > 0.5) this.speedY = this.speedY * -1;
+    // if (Math.random() > 0.5) this.speedX = this.speedX * -1;
+    // if (Math.random() > 0.5) this.speedY = this.speedY * -1;
+  }
+
+  getRandomShape() {
+    let randomShape = Shapes[Math.floor(Math.random() * Shapes.length)];
+    randomShape = randomShape.map((vertice) => {
+      return { x: vertice.x * this.size, y: vertice.y * this.size };
+    });
+
+    return randomShape;
   }
 
   getVerticesPositions() {

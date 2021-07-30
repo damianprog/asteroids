@@ -18,7 +18,7 @@ export default class Game {
   createAsteroids() {
     return [
       new Asteroid(this, new Position(250, 200)),
-      new Asteroid(this, new Position(250, 200)),
+      // new Asteroid(this, new Position(250, 200)),
     ];
   }
 
@@ -43,6 +43,12 @@ export default class Game {
     return new Position(spaceShipRotatedPositionX, spaceShipRotatedPositionY);
   }
 
+  onSpaceShipCollision() {
+    this.spaceShip.lives--;
+    this.spaceShip.position.x = 400;
+    this.spaceShip.position.y = 400;
+  }
+
   createMissile() {
     const missileStartingPosition = this.getMissileStartingPosition();
 
@@ -59,6 +65,30 @@ export default class Game {
     this.spaceShip.draw(ctx);
     this.missiles.forEach((missile) => missile.draw(ctx));
     this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
+
+    const livesLabelsPosition = new Position(this.gameWidth - 150, 15);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#fff';
+
+    for (let i = 0; i < this.spaceShip.lives; i++) {
+      const currentLabelXPosition =
+        livesLabelsPosition.x + i * (this.spaceShip.width / 2 + 10);
+
+      ctx.beginPath();
+      ctx.moveTo(currentLabelXPosition, livesLabelsPosition.y);
+      ctx.lineTo(
+        currentLabelXPosition - this.spaceShip.width / 4,
+        livesLabelsPosition.y + this.spaceShip.height / 2
+      );
+      ctx.lineTo(
+        currentLabelXPosition + this.spaceShip.width / 4,
+        livesLabelsPosition.y + this.spaceShip.height / 2
+      );
+      ctx.shadowColor = '#4d706b';
+      ctx.shadowBlur = 7;
+      ctx.closePath();
+      ctx.stroke();
+    }
   }
 
   update(deltaTime) {
