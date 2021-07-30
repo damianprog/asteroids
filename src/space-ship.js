@@ -11,33 +11,40 @@ export default class SpaceShip {
     this.radiansAngle = 0;
     this.propelSpeed = 0;
     this.lives = 5;
+    this.isImmortal = false;
+    this.immortalityDuration = 4000;
+    this.showSpaceShip = true;
 
     this.speedX = 0;
     this.speedY = 0;
+
+    this.startImmortality();
   }
 
   draw(ctx) {
-    ctx.save();
-    ctx.translate(this.position.x, this.position.y);
-    ctx.rotate(this.radiansAngle);
-    ctx.translate(this.position.x * -1, this.position.y * -1);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#fff';
-    ctx.beginPath();
-    ctx.moveTo(this.position.x + this.height / 2, this.position.y);
-    ctx.lineTo(
-      this.position.x - this.height / 2,
-      this.position.y - this.width / 2
-    );
-    ctx.lineTo(
-      this.position.x - this.height / 2,
-      this.position.y + this.width / 2
-    );
-    ctx.closePath();
-    ctx.shadowColor = '#4d706b';
-    ctx.shadowBlur = 10;
-    ctx.stroke();
-    ctx.restore();
+    if (this.showSpaceShip) {
+      ctx.save();
+      ctx.translate(this.position.x, this.position.y);
+      ctx.rotate(this.radiansAngle);
+      ctx.translate(this.position.x * -1, this.position.y * -1);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(this.position.x + this.height / 2, this.position.y);
+      ctx.lineTo(
+        this.position.x - this.height / 2,
+        this.position.y - this.width / 2
+      );
+      ctx.lineTo(
+        this.position.x - this.height / 2,
+        this.position.y + this.width / 2
+      );
+      ctx.closePath();
+      ctx.shadowColor = '#4d706b';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   flipPosition() {
@@ -93,13 +100,29 @@ export default class SpaceShip {
 
   detectCollisionWithAsteroids() {
     const spaceShipVertices = this.getVerticesPositions();
-    this.game.asteroids.forEach((asteroid) => {
+
+    for (let asteroid of this.game.asteroids) {
       const asteroidVertices = asteroid.getVerticesPositions();
 
       if (collisionDetection(spaceShipVertices, asteroidVertices)) {
         this.game.onSpaceShipCollision();
+        break;
       }
-    });
+    }
+  }
+
+  startImmortality() {
+    this.isImmortal = true;
+
+    const toggleShowSpaceShipInterval = setInterval(() => {
+      this.showSpaceShip = !this.showSpaceShip;
+    }, 200);
+
+    setTimeout(() => {
+      this.isImmortal = false;
+      clearInterval(toggleShowSpaceShipInterval);
+      this.showSpaceShip = true;
+    }, this.immortalityDuration);
   }
 
   update(deltaTime) {
@@ -130,7 +153,10 @@ export default class SpaceShip {
     this.position.x = this.position.x + this.speedX;
     this.position.y = this.position.y + this.speedY;
 
-    this.detectCollisionWithAsteroids();
+    if (!this.isImmortal) {
+      this.detectCollisionWithAsteroids();
+    }
+
     this.flipPosition();
   }
 

@@ -13,13 +13,18 @@ export default class Game {
     this.missiles = [];
     this.level = 1;
     this.asteroids = this.createAsteroids();
+    this.levelInfoOpacity = 0;
+
+    this.showLevelInfo();
   }
 
   createAsteroids() {
-    return [
-      new Asteroid(this, new Position(250, 200)),
-      // new Asteroid(this, new Position(250, 200)),
-    ];
+    const asteroids = [];
+    for (let i = 0; i <= this.level; i++) {
+      asteroids.push(new Asteroid(this, new Position(250, 200)));
+    }
+
+    return asteroids;
   }
 
   getVectorPosition(angle, length) {
@@ -44,9 +49,15 @@ export default class Game {
   }
 
   onSpaceShipCollision() {
+    new Audio('/assets/sounds/spaceship-explode.wav').play();
+
     this.spaceShip.lives--;
-    this.spaceShip.position.x = 400;
-    this.spaceShip.position.y = 400;
+    this.spaceShip.position.x = this.gameWidth / 2;
+    this.spaceShip.position.y = this.gameHeight / 2;
+    this.spaceShip.speedX = 0;
+    this.spaceShip.speedY = 0;
+
+    this.spaceShip.startImmortality();
   }
 
   createMissile() {
@@ -89,6 +100,31 @@ export default class Game {
       ctx.closePath();
       ctx.stroke();
     }
+
+    ctx.font = '40px ZenDots';
+    ctx.fillStyle = `rgba(255,255,255,${this.levelInfoOpacity})`;
+    ctx.textAlign = 'center';
+
+    ctx.fillText(
+      `Level ${this.level}`,
+      this.gameWidth / 2,
+      this.gameHeight / 2 + 15
+    );
+  }
+
+  showLevelInfo() {
+    this.levelInfoOpacity = 1;
+
+    const levelInfoOpacityInterval = setInterval(() => {
+      this.levelInfoOpacity = this.levelInfoOpacity - 0.01;
+      if (this.levelInfoOpacity <= 0) clearInterval(levelInfoOpacityInterval);
+    }, 30);
+  }
+
+  loadNextLevel() {
+    this.level++;
+    this.asteroids = this.createAsteroids();
+    this.showLevelInfo();
   }
 
   update(deltaTime) {
@@ -111,6 +147,10 @@ export default class Game {
     this.asteroids = this.asteroids.filter(
       (asteroid) => !asteroid.markedForDeletion
     );
+
+    if (this.asteroids.length === 0) {
+      this.loadNextLevel();
+    }
   }
 
   clear(ctx) {

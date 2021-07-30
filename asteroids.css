@@ -1,5 +1,14 @@
+@font-face {
+  font-family: 'ZenDots';
+  src: url('assets/fonts/ZenDots-Regular.ttf');
+
+  /* font-family: 'PressStart2P';
+  src: url('assets/fonts/PressStart2P-Regular.ttf'); */
+}
+
 body {
-  font-family: 'PressStart2P';
+  font-family: 'ZenDots';
+  /* font-family: 'PressStart2P'; */
   color: #fff;
 }
 

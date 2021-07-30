@@ -9,14 +9,14 @@ export default class Asteroid {
     this.size = size;
     this.markedForDeletion = false;
     this.currentShape = this.getRandomShape();
-    // this.speed = Math.random() * 0.08 + 0.04;
-    // this.speedX = Math.random() * this.speed;
-    // this.speedY = this.speed - Math.abs(this.speedX);
-    this.speedX = 0;
-    this.speedY = 0;
+    this.speed = Math.random() * 0.08 + 0.04;
+    this.speedX = Math.random() * this.speed;
+    this.speedY = this.speed - Math.abs(this.speedX);
+    // this.speedX = 0;
+    // this.speedY = 0;
 
-    // if (Math.random() > 0.5) this.speedX = this.speedX * -1;
-    // if (Math.random() > 0.5) this.speedY = this.speedY * -1;
+    if (Math.random() > 0.5) this.speedX = this.speedX * -1;
+    if (Math.random() > 0.5) this.speedY = this.speedY * -1;
   }
 
   getRandomShape() {
@@ -83,18 +83,25 @@ export default class Asteroid {
     }
   }
 
-  update(deltaTime) {
-    this.game.missiles.forEach((missile) => {
+  detectCollisionWithMissile() {
+    for (let missile of this.game.missiles) {
       if (
         collisionDetection(
           this.getVerticesPositions(),
           missile.getVerticesPositions()
-        )
+        ) &&
+        !missile.markedForDeletion
       ) {
+        new Audio('/assets/sounds/asteroid-explode.wav').play();
         this.markedForDeletion = true;
         missile.markedForDeletion = true;
+        break;
       }
-    });
+    }
+  }
+
+  update(deltaTime) {
+    this.detectCollisionWithMissile();
 
     this.position.x += this.speedX * deltaTime;
     this.position.y += this.speedY * deltaTime;
