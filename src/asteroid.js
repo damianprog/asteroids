@@ -3,15 +3,28 @@ import Position from './position.js';
 import Shapes from './asteroid-shapes.js';
 
 export default class Asteroid {
-  constructor(game, position, size = 3) {
+  static defaultMinSpeed = 0.04;
+  static defaultMaxSpeed = 0.12;
+
+  constructor(
+    game,
+    position,
+    size = 3,
+    minSpeed = Asteroid.defaultMinSpeed,
+    maxSpeed = Asteroid.defaultMaxSpeed
+  ) {
     this.game = game;
     this.position = position;
     this.size = size;
     this.markedForDeletion = false;
     this.currentShape = this.getRandomShape();
-    this.speed = Math.random() * 0.08 + 0.04;
-    this.speedX = Math.random() * this.speed;
-    this.speedY = this.speed - Math.abs(this.speedX);
+    this.setAsteroidSpeeds(minSpeed, maxSpeed);
+  }
+
+  setAsteroidSpeeds(minSpeed, maxSpeed) {
+    const speed = Math.random() * (maxSpeed - minSpeed) + minSpeed;
+    this.speedX = Math.random() * speed;
+    this.speedY = speed - Math.abs(this.speedX);
     // this.speedX = 0;
     // this.speedY = 0;
 

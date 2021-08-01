@@ -12,16 +12,24 @@ export default class Game {
     this.inputHandler = new Input(this.spaceShip, this);
     this.missiles = [];
     this.level = 1;
-    this.asteroids = this.createAsteroids();
+    this.asteroids = this.createAsteroids(2);
     this.levelInfoOpacity = 0;
 
     this.showLevelInfo();
   }
 
-  createAsteroids() {
+  createAsteroids(quantity, asteroidMinSpeed, asteroidMaxSpeed) {
     const asteroids = [];
-    for (let i = 0; i <= this.level; i++) {
-      asteroids.push(new Asteroid(this, new Position(250, 200)));
+    for (let i = 0; i < quantity; i++) {
+      asteroids.push(
+        new Asteroid(
+          this,
+          new Position(250, 200),
+          3,
+          asteroidMinSpeed,
+          asteroidMaxSpeed
+        )
+      );
     }
 
     return asteroids;
@@ -121,9 +129,38 @@ export default class Game {
     }, 30);
   }
 
+  getAsteroidsMinMaxSpeed() {
+    let additionalSpeed = Math.floor(this.level / 2) / 100;
+    if (this.level % 2 === 0) additionalSpeed = additionalSpeed - 0.01;
+
+    let asteroidMinSpeed = Asteroid.defaultMinSpeed;
+    let asteroidMaxSpeed = Asteroid.defaultMaxSpeed;
+
+    return {
+      minSpeed: asteroidMinSpeed + additionalSpeed,
+      maxSpeed: asteroidMaxSpeed + additionalSpeed,
+    };
+  }
+
+  getAsteroidsLevelQuantity() {
+    return this.level < 8 ? 2 + Math.floor(this.level / 2) : 6;
+  }
+
   loadNextLevel() {
     this.level++;
-    this.asteroids = this.createAsteroids();
+    this.spaceShip.startImmortality();
+
+    const asteroidsQuantity = getAsteroidsLevelQuantity();
+
+    const { minSpeed: asteroidMinSpeed, maxSpeed: asteroidMaxSpeed } =
+      this.getAsteroidsMinMaxSpeed();
+
+    this.asteroids = this.createAsteroids(
+      asteroidsQuantity,
+      asteroidMinSpeed,
+      asteroidMaxSpeed
+    );
+
     this.showLevelInfo();
   }
 
@@ -136,9 +173,23 @@ export default class Game {
     this.asteroids.forEach((asteroid) => {
       asteroid.update(deltaTime);
       if (asteroid.markedForDeletion && asteroid.size > 1) {
+        const { minSpeed: asteroidMinSpeed, maxSpeed: asteroidMaxSpeed } =
+          this.getAsteroidsMinMaxSpeed();
         const newAsteroids = [
-          new Asteroid(this, { ...asteroid.position }, asteroid.size - 1),
-          new Asteroid(this, { ...asteroid.position }, asteroid.size - 1),
+          new Asteroid(
+            this,
+            { ...asteroid.position },
+            asteroid.size - 1,
+            asteroidMinSpeed,
+            asteroidMaxSpeed
+          ),
+          new Asteroid(
+            this,
+            { ...asteroid.position },
+            asteroid.size - 1,
+            asteroidMinSpeed,
+            asteroidMaxSpeed
+          ),
         ];
         this.asteroids = [...newAsteroids, ...this.asteroids];
       }
