@@ -18,6 +18,7 @@ export default class Input {
           break;
 
         case ' ':
+          if (event.repeat) break;
           this.game.createMissile();
           break;
       }

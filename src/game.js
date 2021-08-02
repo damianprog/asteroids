@@ -18,14 +18,21 @@ export default class Game {
     this.showLevelInfo();
   }
 
-  createAsteroids(quantity, asteroidMinSpeed, asteroidMaxSpeed) {
+  createAsteroids(
+    quantity,
+    position = new Position(this.gameWidth / 2, this.gameHeight / 2),
+    size = 3
+  ) {
+    const { minSpeed: asteroidMinSpeed, maxSpeed: asteroidMaxSpeed } =
+      this.getAsteroidsMinMaxSpeed();
+
     const asteroids = [];
     for (let i = 0; i < quantity; i++) {
       asteroids.push(
         new Asteroid(
           this,
-          new Position(250, 200),
-          3,
+          new Position(position.x, position.y),
+          size,
           asteroidMinSpeed,
           asteroidMaxSpeed
         )
@@ -80,11 +87,7 @@ export default class Game {
     this.missiles.push(missile);
   }
 
-  draw(ctx) {
-    this.spaceShip.draw(ctx);
-    this.missiles.forEach((missile) => missile.draw(ctx));
-    this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
-
+  drawLivesLabels(ctx) {
     const livesLabelsPosition = new Position(this.gameWidth - 150, 15);
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#fff';
@@ -108,7 +111,9 @@ export default class Game {
       ctx.closePath();
       ctx.stroke();
     }
+  }
 
+  drawLevelInfo(ctx) {
     ctx.font = '40px ZenDots';
     ctx.fillStyle = `rgba(255,255,255,${this.levelInfoOpacity})`;
     ctx.textAlign = 'center';
@@ -118,6 +123,15 @@ export default class Game {
       this.gameWidth / 2,
       this.gameHeight / 2 + 15
     );
+  }
+
+  draw(ctx) {
+    this.spaceShip.draw(ctx);
+    this.missiles.forEach((missile) => missile.draw(ctx));
+    this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
+
+    this.drawLivesLabels(ctx);
+    this.drawLevelInfo(ctx);
   }
 
   showLevelInfo() {
@@ -150,18 +164,31 @@ export default class Game {
     this.level++;
     this.spaceShip.startImmortality();
 
-    const asteroidsQuantity = getAsteroidsLevelQuantity();
+    const asteroidsQuantity = this.getAsteroidsLevelQuantity();
 
-    const { minSpeed: asteroidMinSpeed, maxSpeed: asteroidMaxSpeed } =
-      this.getAsteroidsMinMaxSpeed();
-
-    this.asteroids = this.createAsteroids(
-      asteroidsQuantity,
-      asteroidMinSpeed,
-      asteroidMaxSpeed
-    );
+    this.asteroids = this.createAsteroids(asteroidsQuantity);
 
     this.showLevelInfo();
+  }
+
+  deleteMarkedAsteroids() {
+    this.asteroids = this.asteroids.filter(
+      (asteroid) => !asteroid.markedForDeletion
+    );
+  }
+
+  shouldAsteroidSpawnNewAsteroids(asteroid) {
+    return asteroid.markedForDeletion && asteroid.size > 1;
+  }
+
+  createSmallerAsteroids(asteroid) {
+    const smallerAsteroids = this.createAsteroids(
+      2,
+      asteroid.position,
+      asteroid.size - 1
+    );
+
+    return smallerAsteroids;
   }
 
   update(deltaTime) {
@@ -172,32 +199,13 @@ export default class Game {
     this.missiles.forEach((missile) => missile.update(deltaTime));
     this.asteroids.forEach((asteroid) => {
       asteroid.update(deltaTime);
-      if (asteroid.markedForDeletion && asteroid.size > 1) {
-        const { minSpeed: asteroidMinSpeed, maxSpeed: asteroidMaxSpeed } =
-          this.getAsteroidsMinMaxSpeed();
-        const newAsteroids = [
-          new Asteroid(
-            this,
-            { ...asteroid.position },
-            asteroid.size - 1,
-            asteroidMinSpeed,
-            asteroidMaxSpeed
-          ),
-          new Asteroid(
-            this,
-            { ...asteroid.position },
-            asteroid.size - 1,
-            asteroidMinSpeed,
-            asteroidMaxSpeed
-          ),
-        ];
-        this.asteroids = [...newAsteroids, ...this.asteroids];
+      if (this.shouldAsteroidSpawnNewAsteroids(asteroid)) {
+        const smallerAsteroids = this.createSmallerAsteroids(asteroid);
+        this.asteroids = [...smallerAsteroids, ...this.asteroids];
       }
     });
 
-    this.asteroids = this.asteroids.filter(
-      (asteroid) => !asteroid.markedForDeletion
-    );
+    this.deleteMarkedAsteroids();
 
     if (this.asteroids.length === 0) {
       this.loadNextLevel();
