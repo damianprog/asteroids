@@ -10,10 +10,12 @@ export default class SpaceShip {
     this.rotationSpeed = 0;
     this.radiansAngle = 0;
     this.propelSpeed = 0;
-    this.lives = 5;
+    this.lives = 1;
     this.isImmortal = false;
     this.immortalityDuration = 4000;
     this.showSpaceShip = true;
+
+    this.timestamp = Date.now();
 
     this.speedX = 0;
     this.speedY = 0;
@@ -105,6 +107,8 @@ export default class SpaceShip {
       const asteroidVertices = asteroid.getVerticesPositions();
 
       if (collisionDetection(spaceShipVertices, asteroidVertices)) {
+        asteroid.markedForDeletion = true;
+        this.game.onAsteroidCollision(asteroid);
         this.game.onSpaceShipCollision();
         break;
       }

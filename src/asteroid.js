@@ -53,6 +53,7 @@ export default class Asteroid {
   }
 
   draw(ctx) {
+    ctx.save();
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#fff';
     ctx.beginPath();
@@ -62,6 +63,7 @@ export default class Asteroid {
     });
     ctx.closePath();
     ctx.stroke();
+    ctx.restore();
   }
 
   flipPosition() {
@@ -105,9 +107,9 @@ export default class Asteroid {
         ) &&
         !missile.markedForDeletion
       ) {
-        new Audio('/assets/sounds/asteroid-explode.wav').play();
         this.markedForDeletion = true;
         missile.markedForDeletion = true;
+        this.game.onAsteroidCollision(this);
         break;
       }
     }

@@ -13,6 +13,7 @@ export default class Missile {
   }
 
   draw(ctx) {
+    ctx.save();
     ctx.beginPath();
     ctx.arc(
       this.position.x,
@@ -24,6 +25,7 @@ export default class Missile {
     );
     ctx.fillStyle = '#ccfef1';
     ctx.fill();
+    ctx.restore();
   }
 
   flipPosition() {

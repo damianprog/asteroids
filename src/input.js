@@ -21,6 +21,10 @@ export default class Input {
           if (event.repeat) break;
           this.game.createMissile();
           break;
+
+        case 'Enter':
+          this.game.start();
+          break;
       }
     });
 
@@ -38,5 +42,9 @@ export default class Input {
           break;
       }
     });
+  }
+
+  setSpaceShip(spaceShip) {
+    this.spaceShip = spaceShip;
   }
 }

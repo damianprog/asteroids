@@ -1,3 +1,4 @@
+import GAME_STATE from './gameStates.js';
 import SpaceShip from './space-ship.js';
 import Input from './input.js';
 import Missile from './missile.js';
@@ -8,14 +9,33 @@ export default class Game {
   constructor(gameWidth, gameHeight) {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
+    this.gameState = GAME_STATE.WELCOME_MENU;
+    this.initializeDefaults();
+
+    this.showLevelInfo();
+  }
+
+  initializeDefaults() {
     this.spaceShip = new SpaceShip(this);
-    this.inputHandler = new Input(this.spaceShip, this);
+    this.setInputHandler(this.spaceShip);
     this.missiles = [];
     this.level = 1;
     this.asteroids = this.createAsteroids(2);
     this.levelInfoOpacity = 0;
+    this.score = 0;
 
-    this.showLevelInfo();
+    const localStorageBestScore = window.localStorage.getItem(
+      'neonAsteroidsBestScore'
+    );
+    this.bestScore = localStorageBestScore ? localStorageBestScore : 0;
+  }
+
+  setInputHandler(spaceShip) {
+    if (this.inputHandler) {
+      this.inputHandler.setSpaceShip(spaceShip);
+    } else {
+      this.inputHandler = new Input(spaceShip, this);
+    }
   }
 
   createAsteroids(
@@ -63,10 +83,43 @@ export default class Game {
     return new Position(spaceShipRotatedPositionX, spaceShipRotatedPositionY);
   }
 
+  getScoreForAsteroid(asteroid) {
+    switch (asteroid.size) {
+      case 3:
+        return 20;
+      case 2:
+        return 50;
+      case 1:
+        return 100;
+    }
+  }
+
+  onAsteroidCollision(asteroid) {
+    new Audio('/assets/sounds/asteroid-explode.wav').play();
+
+    let scoreForAsteroid = this.getScoreForAsteroid(asteroid);
+
+    this.score += scoreForAsteroid;
+  }
+
+  resolveGameOver() {
+    if (this.spaceShip.lives === 0) {
+      if (this.score > this.bestScore) {
+        window.localStorage.setItem('neonAsteroidsBestScore', this.score);
+        this.bestScore = this.score;
+      }
+
+      this.gameState = GAME_STATE.GAMEOVER;
+    }
+  }
+
   onSpaceShipCollision() {
     new Audio('/assets/sounds/spaceship-explode.wav').play();
 
     this.spaceShip.lives--;
+
+    this.resolveGameOver();
+
     this.spaceShip.position.x = this.gameWidth / 2;
     this.spaceShip.position.y = this.gameHeight / 2;
     this.spaceShip.speedX = 0;
@@ -88,9 +141,12 @@ export default class Game {
   }
 
   drawLivesLabels(ctx) {
-    const livesLabelsPosition = new Position(this.gameWidth - 150, 15);
+    const livesLabelsPosition = new Position(this.gameWidth - 168, 15);
+    ctx.save();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#fff';
+    ctx.shadowColor = '#4d706b';
+    ctx.shadowBlur = 7;
 
     for (let i = 0; i < this.spaceShip.lives; i++) {
       const currentLabelXPosition =
@@ -106,11 +162,11 @@ export default class Game {
         currentLabelXPosition + this.spaceShip.width / 4,
         livesLabelsPosition.y + this.spaceShip.height / 2
       );
-      ctx.shadowColor = '#4d706b';
-      ctx.shadowBlur = 7;
+
       ctx.closePath();
       ctx.stroke();
     }
+    ctx.restore();
   }
 
   drawLevelInfo(ctx) {
@@ -125,13 +181,71 @@ export default class Game {
     );
   }
 
-  draw(ctx) {
-    this.spaceShip.draw(ctx);
-    this.missiles.forEach((missile) => missile.draw(ctx));
-    this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
+  drawScore(ctx) {
+    ctx.save();
+    ctx.font = '20px ZenDots';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
 
-    this.drawLivesLabels(ctx);
-    this.drawLevelInfo(ctx);
+    ctx.fillText(this.bestScore, 110, 35);
+    ctx.fillText(this.score, this.gameWidth / 2, 35);
+    ctx.restore();
+  }
+
+  draw(ctx) {
+    if (
+      this.gameState === GAME_STATE.RUNNING ||
+      this.gameState === GAME_STATE.PAUSED
+    ) {
+      this.spaceShip.draw(ctx);
+      this.missiles.forEach((missile) => missile.draw(ctx));
+      this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
+
+      this.drawLivesLabels(ctx);
+      this.drawLevelInfo(ctx);
+      this.drawScore(ctx);
+    }
+    if (this.gameState === GAME_STATE.WELCOME_MENU) {
+      ctx.save();
+      ctx.font = '60px ZenDots';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+
+      ctx.fillText('Asteroids', this.gameWidth / 2, this.gameHeight / 2);
+
+      ctx.font = '23px ZenDots';
+      ctx.fillText(
+        'Click Enter to start',
+        this.gameWidth / 2,
+        this.gameHeight / 2 + 50
+      );
+      ctx.restore();
+    }
+    if (this.gameState === GAME_STATE.GAMEOVER) {
+      ctx.save();
+      ctx.font = '40px ZenDots';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+
+      ctx.fillText('Game Over', this.gameWidth / 2, this.gameHeight / 2 - 70);
+      ctx.font = '23px ZenDots';
+      ctx.fillText(
+        `Your score: ${this.score}`,
+        this.gameWidth / 2,
+        this.gameHeight / 2 - 20
+      );
+      ctx.fillText(
+        `Best score: ${this.bestScore}`,
+        this.gameWidth / 2,
+        this.gameHeight / 2 + 30
+      );
+      ctx.fillText(
+        'Click Enter to restart',
+        this.gameWidth / 2,
+        this.gameHeight / 2 + 80
+      );
+      ctx.restore();
+    }
   }
 
   showLevelInfo() {
@@ -140,7 +254,7 @@ export default class Game {
     const levelInfoOpacityInterval = setInterval(() => {
       this.levelInfoOpacity = this.levelInfoOpacity - 0.01;
       if (this.levelInfoOpacity <= 0) clearInterval(levelInfoOpacityInterval);
-    }, 30);
+    }, 50);
   }
 
   getAsteroidsMinMaxSpeed() {
@@ -171,16 +285,6 @@ export default class Game {
     this.showLevelInfo();
   }
 
-  deleteMarkedAsteroids() {
-    this.asteroids = this.asteroids.filter(
-      (asteroid) => !asteroid.markedForDeletion
-    );
-  }
-
-  shouldAsteroidSpawnNewAsteroids(asteroid) {
-    return asteroid.markedForDeletion && asteroid.size > 1;
-  }
-
   createSmallerAsteroids(asteroid) {
     const smallerAsteroids = this.createAsteroids(
       2,
@@ -191,7 +295,32 @@ export default class Game {
     return smallerAsteroids;
   }
 
+  start() {
+    if (
+      this.gameState === GAME_STATE.WELCOME_MENU ||
+      this.gameState === GAME_STATE.GAMEOVER
+    ) {
+      this.initializeDefaults();
+      this.gameState = GAME_STATE.RUNNING;
+    }
+  }
+
+  deleteMarkedAsteroids() {
+    this.asteroids = this.asteroids.filter(
+      (asteroid) => !asteroid.markedForDeletion
+    );
+  }
+
+  shouldAsteroidSpawnNewAsteroids(asteroid) {
+    return asteroid.markedForDeletion && asteroid.size > 1;
+  }
+
   update(deltaTime) {
+    if (
+      this.gameState === GAME_STATE.WELCOME_MENU ||
+      this.gameState === GAME_STATE.GAMEOVER
+    )
+      return;
     this.spaceShip.update(deltaTime);
     this.missiles = this.missiles.filter(
       (missile) => !missile.markedForDeletion
