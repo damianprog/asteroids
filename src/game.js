@@ -40,7 +40,7 @@ export default class Game {
 
   createAsteroids(
     quantity,
-    position = new Position(this.gameWidth / 2, this.gameHeight / 2),
+    position = new Position(150, this.gameHeight / 2),
     size = 3
   ) {
     const { minSpeed: asteroidMinSpeed, maxSpeed: asteroidMaxSpeed } =
@@ -193,10 +193,7 @@ export default class Game {
   }
 
   draw(ctx) {
-    if (
-      this.gameState === GAME_STATE.RUNNING ||
-      this.gameState === GAME_STATE.PAUSED
-    ) {
+    if (this.gameState === GAME_STATE.RUNNING) {
       this.spaceShip.draw(ctx);
       this.missiles.forEach((missile) => missile.draw(ctx));
       this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
@@ -206,6 +203,7 @@ export default class Game {
       this.drawScore(ctx);
     }
     if (this.gameState === GAME_STATE.WELCOME_MENU) {
+      this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
       ctx.save();
       ctx.font = '60px ZenDots';
       ctx.fillStyle = '#fff';
@@ -318,26 +316,30 @@ export default class Game {
   update(deltaTime) {
     if (
       this.gameState === GAME_STATE.WELCOME_MENU ||
-      this.gameState === GAME_STATE.GAMEOVER
-    )
-      return;
-    this.spaceShip.update(deltaTime);
-    this.missiles = this.missiles.filter(
-      (missile) => !missile.markedForDeletion
-    );
-    this.missiles.forEach((missile) => missile.update(deltaTime));
-    this.asteroids.forEach((asteroid) => {
-      asteroid.update(deltaTime);
-      if (this.shouldAsteroidSpawnNewAsteroids(asteroid)) {
-        const smallerAsteroids = this.createSmallerAsteroids(asteroid);
-        this.asteroids = [...smallerAsteroids, ...this.asteroids];
+      this.gameState === GAME_STATE.RUNNING
+    ) {
+      this.asteroids.forEach((asteroid) => asteroid.update(deltaTime));
+    }
+
+    if (this.gameState === GAME_STATE.RUNNING) {
+      this.spaceShip.update(deltaTime);
+      this.missiles = this.missiles.filter(
+        (missile) => !missile.markedForDeletion
+      );
+      this.missiles.forEach((missile) => missile.update(deltaTime));
+
+      this.asteroids.forEach((asteroid) => {
+        if (this.shouldAsteroidSpawnNewAsteroids(asteroid)) {
+          const smallerAsteroids = this.createSmallerAsteroids(asteroid);
+          this.asteroids = [...smallerAsteroids, ...this.asteroids];
+        }
+      });
+
+      this.deleteMarkedAsteroids();
+
+      if (this.asteroids.length === 0) {
+        this.loadNextLevel();
       }
-    });
-
-    this.deleteMarkedAsteroids();
-
-    if (this.asteroids.length === 0) {
-      this.loadNextLevel();
     }
   }
 

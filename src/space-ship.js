@@ -4,18 +4,19 @@ import Position from './position.js';
 export default class SpaceShip {
   constructor(game) {
     this.game = game;
-    this.position = new Position(200, 400);
+    this.position = new Position(
+      this.game.gameWidth / 2,
+      this.game.gameHeight / 2
+    );
     this.height = 50;
     this.width = 40;
     this.rotationSpeed = 0;
     this.radiansAngle = 0;
     this.propelSpeed = 0;
-    this.lives = 1;
+    this.lives = 5;
     this.isImmortal = false;
     this.immortalityDuration = 4000;
     this.showSpaceShip = true;
-
-    this.timestamp = Date.now();
 
     this.speedX = 0;
     this.speedY = 0;
