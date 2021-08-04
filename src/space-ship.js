@@ -130,29 +130,24 @@ export default class SpaceShip {
     }, this.immortalityDuration);
   }
 
-  update(deltaTime) {
+  updateRadiansAngle(deltaTime) {
     this.radiansAngle =
       this.radiansAngle >= 2 * Math.PI
         ? 0
         : this.radiansAngle + this.rotationSpeed * deltaTime;
+  }
 
-    const newSpeedX =
-      this.speedX + this.propelSpeed * deltaTime * Math.cos(this.radiansAngle);
-    const newSpeedY =
-      this.speedY + this.propelSpeed * deltaTime * Math.sin(this.radiansAngle);
+  getVectorLength(position) {
+    return Math.sqrt(Math.pow(position.x, 2) + Math.pow(position.y, 2));
+  }
 
-    const speedVectorLength = Math.sqrt(
-      Math.pow(newSpeedX, 2) + Math.pow(newSpeedY, 2)
-    );
+  update(deltaTime) {
+    this.updateRadiansAngle(deltaTime);
 
-    if (Math.abs(speedVectorLength) < 8) {
-      this.speedX = newSpeedX;
-      this.speedY = newSpeedY;
-    }
-
-    if (this.propelSpeed === 0) {
-      this.speedX = this.getSlowerSpeed(this.speedX, deltaTime);
-      this.speedY = this.getSlowerSpeed(this.speedY, deltaTime);
+    if (this.propelSpeed > 0) {
+      this.updateSpeedByPropelSpeed(deltaTime);
+    } else {
+      this.updateSpeedBySlowerSpeed(deltaTime);
     }
 
     this.position.x = this.position.x + this.speedX;
@@ -165,6 +160,28 @@ export default class SpaceShip {
     this.flipPosition();
   }
 
+  getUpdatedSpeedByPropelSpeed(deltaTime) {
+    const newSpeedX =
+      this.speedX + this.propelSpeed * deltaTime * Math.cos(this.radiansAngle);
+    const newSpeedY =
+      this.speedY + this.propelSpeed * deltaTime * Math.sin(this.radiansAngle);
+
+    return new Position(newSpeedX, newSpeedY);
+  }
+
+  updateSpeedByPropelSpeed(deltaTime) {
+    const updatedSpeed = this.getUpdatedSpeedByPropelSpeed(deltaTime);
+
+    const speedVectorLength = this.getVectorLength(updatedSpeed);
+
+    const maxSpeedVectorLength = 8;
+
+    if (speedVectorLength < maxSpeedVectorLength) {
+      this.speedX = updatedSpeed.x;
+      this.speedY = updatedSpeed.y;
+    }
+  }
+
   getSlowerSpeed(speed, deltaTime) {
     if (speed === 0) return 0;
 
@@ -174,6 +191,20 @@ export default class SpaceShip {
       (speed > 0 && newSpeed < 0) || (speed < 0 && newSpeed > 0);
 
     return hasNewSpeedOppositeDirection ? 0 : newSpeed;
+  }
+
+  getUpdatedSpeedBySlowerSpeed(deltaTime) {
+    const newSpeedX = this.getSlowerSpeed(this.speedX, deltaTime);
+    const newSpeedY = this.getSlowerSpeed(this.speedY, deltaTime);
+
+    return new Position(newSpeedX, newSpeedY);
+  }
+
+  updateSpeedBySlowerSpeed(deltaTime) {
+    const updatedSpeed = this.getUpdatedSpeedBySlowerSpeed(deltaTime);
+
+    this.speedX = updatedSpeed.x;
+    this.speedY = updatedSpeed.y;
   }
 
   rotateLeft() {
