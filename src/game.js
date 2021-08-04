@@ -4,6 +4,8 @@ import Input from './input.js';
 import Missile from './missile.js';
 import Position from './position.js';
 import Asteroid from './asteroid.js';
+import Hud from './hud.js';
+import InfoPanels from './infoPanels.js';
 
 export default class Game {
   constructor(gameWidth, gameHeight) {
@@ -28,6 +30,9 @@ export default class Game {
       'neonAsteroidsBestScore'
     );
     this.bestScore = localStorageBestScore ? localStorageBestScore : 0;
+
+    this.infoPanels = new InfoPanels(this);
+    this.hud = new Hud(this);
   }
 
   setInputHandler(spaceShip) {
@@ -140,109 +145,19 @@ export default class Game {
     this.missiles.push(missile);
   }
 
-  drawLivesLabels(ctx) {
-    const livesLabelsPosition = new Position(this.gameWidth - 168, 15);
-    ctx.save();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#fff';
-    ctx.shadowColor = '#4d706b';
-    ctx.shadowBlur = 7;
-
-    for (let i = 0; i < this.spaceShip.lives; i++) {
-      const currentLabelXPosition =
-        livesLabelsPosition.x + i * (this.spaceShip.width / 2 + 10);
-
-      ctx.beginPath();
-      ctx.moveTo(currentLabelXPosition, livesLabelsPosition.y);
-      ctx.lineTo(
-        currentLabelXPosition - this.spaceShip.width / 4,
-        livesLabelsPosition.y + this.spaceShip.height / 2
-      );
-      ctx.lineTo(
-        currentLabelXPosition + this.spaceShip.width / 4,
-        livesLabelsPosition.y + this.spaceShip.height / 2
-      );
-
-      ctx.closePath();
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  drawLevelInfo(ctx) {
-    ctx.font = '40px ZenDots';
-    ctx.fillStyle = `rgba(255,255,255,${this.levelInfoOpacity})`;
-    ctx.textAlign = 'center';
-
-    ctx.fillText(
-      `Level ${this.level}`,
-      this.gameWidth / 2,
-      this.gameHeight / 2 + 15
-    );
-  }
-
-  drawScore(ctx) {
-    ctx.save();
-    ctx.font = '20px ZenDots';
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-
-    ctx.fillText(this.bestScore, 110, 35);
-    ctx.fillText(this.score, this.gameWidth / 2, 35);
-    ctx.restore();
-  }
-
   draw(ctx) {
     if (this.gameState === GAME_STATE.RUNNING) {
       this.spaceShip.draw(ctx);
       this.missiles.forEach((missile) => missile.draw(ctx));
       this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
 
-      this.drawLivesLabels(ctx);
-      this.drawLevelInfo(ctx);
-      this.drawScore(ctx);
+      this.hud.draw(ctx);
     }
     if (this.gameState === GAME_STATE.WELCOME_MENU) {
-      this.asteroids.forEach((asteroid) => asteroid.draw(ctx));
-      ctx.save();
-      ctx.font = '60px ZenDots';
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-
-      ctx.fillText('Asteroids', this.gameWidth / 2, this.gameHeight / 2);
-
-      ctx.font = '23px ZenDots';
-      ctx.fillText(
-        'Click Enter to start',
-        this.gameWidth / 2,
-        this.gameHeight / 2 + 50
-      );
-      ctx.restore();
+      this.infoPanels.drawWelcomeMenu(ctx);
     }
     if (this.gameState === GAME_STATE.GAMEOVER) {
-      ctx.save();
-      ctx.font = '40px ZenDots';
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-
-      ctx.fillText('Game Over', this.gameWidth / 2, this.gameHeight / 2 - 70);
-      ctx.font = '23px ZenDots';
-      ctx.fillText(
-        `Your score: ${this.score}`,
-        this.gameWidth / 2,
-        this.gameHeight / 2 - 20
-      );
-      ctx.fillText(
-        `Best score: ${this.bestScore}`,
-        this.gameWidth / 2,
-        this.gameHeight / 2 + 30
-      );
-      ctx.fillText(
-        'Click Enter to restart',
-        this.gameWidth / 2,
-        this.gameHeight / 2 + 80
-      );
-      ctx.restore();
+      this.infoPanels.drawGameover(ctx);
     }
   }
 
@@ -309,8 +224,23 @@ export default class Game {
     );
   }
 
+  deleteMarkedMissiles() {
+    this.missiles = this.missiles.filter(
+      (missile) => !missile.markedForDeletion
+    );
+  }
+
   shouldAsteroidSpawnNewAsteroids(asteroid) {
     return asteroid.markedForDeletion && asteroid.size > 1;
+  }
+
+  spawnAsteroidsForMarkedAstroids() {
+    this.asteroids.forEach((asteroid) => {
+      if (this.shouldAsteroidSpawnNewAsteroids(asteroid)) {
+        const smallerAsteroids = this.createSmallerAsteroids(asteroid);
+        this.asteroids = [...smallerAsteroids, ...this.asteroids];
+      }
+    });
   }
 
   update(deltaTime) {
@@ -323,17 +253,10 @@ export default class Game {
 
     if (this.gameState === GAME_STATE.RUNNING) {
       this.spaceShip.update(deltaTime);
-      this.missiles = this.missiles.filter(
-        (missile) => !missile.markedForDeletion
-      );
       this.missiles.forEach((missile) => missile.update(deltaTime));
+      this.deleteMarkedMissiles();
 
-      this.asteroids.forEach((asteroid) => {
-        if (this.shouldAsteroidSpawnNewAsteroids(asteroid)) {
-          const smallerAsteroids = this.createSmallerAsteroids(asteroid);
-          this.asteroids = [...smallerAsteroids, ...this.asteroids];
-        }
-      });
+      this.spawnAsteroidsForMarkedAstroids();
 
       this.deleteMarkedAsteroids();
 

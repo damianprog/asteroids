@@ -76,7 +76,7 @@ export default class Missile {
       Math.pow(distanceX, 2) + Math.pow(distanceY, 2)
     );
 
-    this.markedForDeletion = this.distanceTravelled > 300;
+    if (this.distanceTravelled > 300) this.markedForDeletion = true;
 
     this.flipPosition();
   }
